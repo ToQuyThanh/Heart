@@ -3,24 +3,33 @@
 
 <head>
   <meta charset="UTF-8" />
-  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0, user-scalable=no, viewport-fit=cover">
   <title>Gửi Nguyễn Châm Anh</title>
   <link href="https://fonts.googleapis.com/css2?family=Comfortaa:wght@300;400;700&display=swap" rel="stylesheet">
   <style>
-    html, body {
+    html,
+    body {
       margin: 0;
       padding: 0;
       background: black;
       overflow: hidden;
       font-family: 'Segoe UI', sans-serif;
-      height: 100%;
+      height: 100vh;
+      width: 100vw;
+      user-select: none;
+      -webkit-user-select: none;
+      -moz-user-select: none;
+      -ms-user-select: none;
+      touch-action: none;
     }
 
     canvas {
       display: block;
-      position: absolute;
+      position: fixed;
       top: 0;
       left: 0;
+      width: 100vw;
+      height: 100vh;
     }
 
     .text {
@@ -41,14 +50,21 @@
     }
 
     @keyframes blink-cursor {
-      from, to { border-color: transparent }
-      50% { border-color: #FFB6D9 }
+
+      from,
+      to {
+        border-color: transparent
+      }
+
+      50% {
+        border-color: #FFB6D9
+      }
     }
 
     .rotate-wrapper {
       display: none;
-      width: 100%;
-      height: 100%;
+      width: 100vw;
+      height: 100vh;
       position: fixed;
       top: 0;
       left: 0;
@@ -83,6 +99,8 @@
       position: relative;
       transform-origin: center center;
       animation: rotate-horizontal 3s forwards ease-in-out;
+      backface-visibility: hidden;
+      will-change: transform;
     }
 
     .phone-icon::after {
@@ -98,14 +116,29 @@
     }
 
     @keyframes flicker {
-      0%, 100% { opacity: 1; }
-      50% { opacity: 0.3; }
+
+      0%,
+      100% {
+        opacity: 1;
+      }
+
+      50% {
+        opacity: 0.3;
+      }
     }
 
     @keyframes rotate-horizontal {
-      0% { transform: rotate(0deg) scale(1); }
-      50% { transform: rotate(90deg) scale(1.1); }
-      100% { transform: rotate(90deg) scale(1); }
+      0% {
+        transform: rotate(0deg) scale(1);
+      }
+
+      50% {
+        transform: rotate(90deg) scale(1.1);
+      }
+
+      100% {
+        transform: rotate(90deg) scale(1);
+      }
     }
 
     .among-us {
@@ -140,86 +173,113 @@
     }
 
     @keyframes runAcross {
-      0% { left: -300px; }
-      100% { left: 100vw; }
+      0% {
+        left: -300px;
+      }
+
+      100% {
+        left: 100vw;
+      }
     }
 
     @keyframes fadeIn {
-      to { opacity: 1; }
+      to {
+        opacity: 1;
+      }
     }
   </style>
 </head>
 
 <body>
-  <!-- Among Us chạy ngang -->
   <div id="amongUs" class="among-us">
     <div class="impostor-text">On the Impostor's task list.</div>
     <div class="character"></div>
   </div>
 
-  <!-- Yêu cầu xoay điện thoại -->
   <div class="rotate-wrapper">
     <div class="rotate-text">For Better Experience</div>
     <div class="phone-icon"></div>
     <div class="rotate-text">Rotate Your Phone</div>
   </div>
 
-  <!-- Canvas hiệu ứng -->
   <canvas id="matrixCanvas"></canvas>
   <canvas id="heartCanvas" style="opacity: 0;"></canvas>
   <div id="message" class="text"></div>
 
   <script>
-    // ===== MATRIX EFFECT =====
-    const matrixCanvas = document.getElementById('matrixCanvas');
-    const mtx = matrixCanvas.getContext('2d');
-    matrixCanvas.width = window.innerWidth;
-    matrixCanvas.height = window.innerHeight;
+    let started = false;
 
-    const katakana = "我你他是的了不在人有这中大为上个国到说们子和地出道也时年得就那要下以生会自着去之过家学对可里后小么心多天而能好没把开看起发只如前些样长用种主面又现么法全三手日还新因本见同文分次作身话向力将明问它两业话实名认进其处等机民应动体变情部然总条期决公特统目化位加品";
-    const fontSize = 10;
-    const columns = matrixCanvas.width / fontSize;
-    const drops = Array(Math.floor(columns)).fill(1);
+    function checkOrientation() {
+      const isLandscape = window.matchMedia("(orientation: landscape)").matches;
+      const rotateWrapper = document.querySelector(".rotate-wrapper");
 
-    function drawMatrix() {
-      mtx.fillStyle = 'rgba(0, 0, 0, 0.05)';
-      mtx.fillRect(0, 0, matrixCanvas.width, matrixCanvas.height);
-      mtx.fillStyle = '#FFB6D9';
-      mtx.font = `${fontSize}px monospace`;
-
-      drops.forEach((y, x) => {
-        const text = katakana.charAt(Math.floor(Math.random() * katakana.length));
-        mtx.fillText(text, x * fontSize, y * fontSize);
-        if (y * fontSize > matrixCanvas.height && Math.random() > 0.975) drops[x] = 0;
-        drops[x]++;
-      });
+      if (isLandscape) {
+        rotateWrapper.style.display = "none";
+        if (!started) {
+          started = true;
+          setTimeout(() => startMatrix(), 300);
+        }
+      } else {
+        rotateWrapper.style.display = "flex";
+      }
     }
 
-    const matrixInterval = setInterval(drawMatrix, 33);
 
-    setTimeout(() => {
-      matrixCanvas.style.transition = 'opacity 2s';
-      matrixCanvas.style.opacity = '0';
-      clearInterval(matrixInterval);
+    window.addEventListener('orientationchange', checkOrientation);
+    window.addEventListener('resize', checkOrientation);
+    window.addEventListener('load', checkOrientation);
+
+    // === Matrix effect (tách ra để chỉ gọi khi landscape) ===
+    function startMatrix() {
+      const matrixCanvas = document.getElementById('matrixCanvas');
+      const mtx = matrixCanvas.getContext('2d');
+      matrixCanvas.width = window.innerWidth;
+      matrixCanvas.height = window.innerHeight;
+
+      const katakana = "我你他是的了不在人有这中大为上个国到说们子和地出道也时年得就那要下以生会自着去之过家学对可里后小么心多天而能好没把开看起发只如前些样长用种主面又现么法全三手日还新因本见同文分次作身话向力将明问它两业话实名认进其处等机民应动体变情部然总条期决公特统目化位加品";
+      const fontSize = 10;
+      const columns = matrixCanvas.width / fontSize;
+      const drops = Array(Math.floor(columns)).fill(1);
+
+      function drawMatrix() {
+        mtx.fillStyle = 'rgba(0, 0, 0, 0.05)';
+        mtx.fillRect(0, 0, matrixCanvas.width, matrixCanvas.height);
+        mtx.fillStyle = '#FFB6D9';
+        mtx.font = `${fontSize}px monospace`;
+
+        drops.forEach((y, x) => {
+          const text = katakana.charAt(Math.floor(Math.random() * katakana.length));
+          mtx.fillText(text, x * fontSize, y * fontSize);
+          if (y * fontSize > matrixCanvas.height && Math.random() > 0.975) drops[x] = 0;
+          drops[x]++;
+        });
+      }
+
+      const matrixInterval = setInterval(drawMatrix, 33);
+
       setTimeout(() => {
-        matrixCanvas.remove();
-        startHeart();
-      }, 2000);
-    }, 8000);
+        matrixCanvas.style.transition = 'opacity 2s';
+        matrixCanvas.style.opacity = '0';
+        clearInterval(matrixInterval);
+        setTimeout(() => {
+          matrixCanvas.remove();
+          startHeart();
+        }, 2000);
+      }, 8000);
+    }
 
-    // ===== BACKGROUND HEART EFFECT =====
     const heartCanvas = document.getElementById('heartCanvas');
     const ctx = heartCanvas.getContext('2d');
     let width, height;
     let particles = [];
-    const PARTICLE_COUNT = 600;
+    const PARTICLE_COUNT = window.innerWidth < 768 ? 400 : 600;
     const heartChar = "❤";
     const heartSize = 10;
     const CENTER_HEART_RADIUS = 150;
 
     function resize() {
-      width = window.innerWidth;
-      height = window.innerHeight;
+      width = document.documentElement.clientWidth;
+      height = document.documentElement.clientHeight;
       heartCanvas.width = width;
       heartCanvas.height = height;
       updateTextPosition();
@@ -239,9 +299,7 @@
     }
 
     class Particle {
-      constructor() {
-        this.reset();
-      }
+      constructor() { this.reset(); }
       reset() {
         do {
           this.x = Math.random() * width;
@@ -249,7 +307,7 @@
         } while (isInsideBigHeart(this.x, this.y));
         this.size = Math.random() * 0.4 + 0.3;
         this.speedY = 0.2 + Math.random() * 0.3;
-        this.alpha = 0.5 + Math.random() * 0.5;
+        this.alpha = 0.2 + Math.random() * 0.3;
       }
       update() {
         this.y -= this.speedY;
@@ -387,4 +445,5 @@
     }
   </script>
 </body>
+
 </html>
