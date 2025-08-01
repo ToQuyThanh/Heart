@@ -1,0 +1,390 @@
+<!DOCTYPE html>
+<html lang="vi">
+
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  <title>Gửi Nguyễn Châm Anh</title>
+  <link href="https://fonts.googleapis.com/css2?family=Comfortaa:wght@300;400;700&display=swap" rel="stylesheet">
+  <style>
+    html, body {
+      margin: 0;
+      padding: 0;
+      background: black;
+      overflow: hidden;
+      font-family: 'Segoe UI', sans-serif;
+      height: 100%;
+    }
+
+    canvas {
+      display: block;
+      position: absolute;
+      top: 0;
+      left: 0;
+    }
+
+    .text {
+      position: absolute;
+      font-size: 2em;
+      color: #FFB6D9;
+      font-weight: 500;
+      font-family: 'Comfortaa', 'Segoe UI', sans-serif;
+      text-align: center;
+      white-space: pre;
+      pointer-events: none;
+      border-right: 3px solid #FFB6D9;
+      animation: blink-cursor 0.8s steps(1) infinite;
+      transform: translate(-50%, -50%);
+      line-height: 1.6;
+      max-width: 90vw;
+      opacity: 0;
+    }
+
+    @keyframes blink-cursor {
+      from, to { border-color: transparent }
+      50% { border-color: #FFB6D9 }
+    }
+
+    .rotate-wrapper {
+      display: none;
+      width: 100%;
+      height: 100%;
+      position: fixed;
+      top: 0;
+      left: 0;
+      background: black;
+      color: #FFB6D9;
+      z-index: 9999;
+      justify-content: center;
+      align-items: center;
+      flex-direction: row;
+      gap: 40px;
+    }
+
+    @media (orientation: portrait) {
+      .rotate-wrapper {
+        display: flex;
+      }
+    }
+
+    .rotate-text {
+      writing-mode: vertical-rl;
+      text-align: center;
+      font-size: 1.2rem;
+      animation: flicker 2s infinite;
+      letter-spacing: 2px;
+    }
+
+    .phone-icon {
+      width: 60px;
+      height: 120px;
+      border: 2px solid #FFB6D9;
+      border-radius: 20px;
+      position: relative;
+      transform-origin: center center;
+      animation: rotate-horizontal 3s forwards ease-in-out;
+    }
+
+    .phone-icon::after {
+      content: '';
+      position: absolute;
+      top: 20px;
+      left: 50%;
+      transform: translateX(-50%);
+      width: 40%;
+      height: 4px;
+      background: #FFB6D9;
+      border-radius: 2px;
+    }
+
+    @keyframes flicker {
+      0%, 100% { opacity: 1; }
+      50% { opacity: 0.3; }
+    }
+
+    @keyframes rotate-horizontal {
+      0% { transform: rotate(0deg) scale(1); }
+      50% { transform: rotate(90deg) scale(1.1); }
+      100% { transform: rotate(90deg) scale(1); }
+    }
+
+    .among-us {
+      position: fixed;
+      bottom: 60px;
+      left: +400px;
+      height: 100px;
+      display: flex;
+      align-items: center;
+      animation: runAcross 6s linear forwards;
+      z-index: 9999;
+      display: none;
+    }
+
+    .character {
+      width: 100px;
+      height: 100px;
+      background-image: url('among_us_player_pink_icon_156938.png');
+      background-size: contain;
+      background-repeat: no-repeat;
+      background-position: center;
+    }
+
+    .impostor-text {
+      color: #FFB6D9;
+      font-family: 'Comfortaa', cursive;
+      font-size: 1.2rem;
+      white-space: nowrap;
+      margin-left: 10px;
+      opacity: 0;
+      animation: fadeIn 1s forwards 0.5s;
+    }
+
+    @keyframes runAcross {
+      0% { left: -300px; }
+      100% { left: 100vw; }
+    }
+
+    @keyframes fadeIn {
+      to { opacity: 1; }
+    }
+  </style>
+</head>
+
+<body>
+  <!-- Among Us chạy ngang -->
+  <div id="amongUs" class="among-us">
+    <div class="impostor-text">On the Impostor's task list.</div>
+    <div class="character"></div>
+  </div>
+
+  <!-- Yêu cầu xoay điện thoại -->
+  <div class="rotate-wrapper">
+    <div class="rotate-text">For Better Experience</div>
+    <div class="phone-icon"></div>
+    <div class="rotate-text">Rotate Your Phone</div>
+  </div>
+
+  <!-- Canvas hiệu ứng -->
+  <canvas id="matrixCanvas"></canvas>
+  <canvas id="heartCanvas" style="opacity: 0;"></canvas>
+  <div id="message" class="text"></div>
+
+  <script>
+    // ===== MATRIX EFFECT =====
+    const matrixCanvas = document.getElementById('matrixCanvas');
+    const mtx = matrixCanvas.getContext('2d');
+    matrixCanvas.width = window.innerWidth;
+    matrixCanvas.height = window.innerHeight;
+
+    const katakana = "我你他是的了不在人有这中大为上个国到说们子和地出道也时年得就那要下以生会自着去之过家学对可里后小么心多天而能好没把开看起发只如前些样长用种主面又现么法全三手日还新因本见同文分次作身话向力将明问它两业话实名认进其处等机民应动体变情部然总条期决公特统目化位加品";
+    const fontSize = 10;
+    const columns = matrixCanvas.width / fontSize;
+    const drops = Array(Math.floor(columns)).fill(1);
+
+    function drawMatrix() {
+      mtx.fillStyle = 'rgba(0, 0, 0, 0.05)';
+      mtx.fillRect(0, 0, matrixCanvas.width, matrixCanvas.height);
+      mtx.fillStyle = '#FFB6D9';
+      mtx.font = `${fontSize}px monospace`;
+
+      drops.forEach((y, x) => {
+        const text = katakana.charAt(Math.floor(Math.random() * katakana.length));
+        mtx.fillText(text, x * fontSize, y * fontSize);
+        if (y * fontSize > matrixCanvas.height && Math.random() > 0.975) drops[x] = 0;
+        drops[x]++;
+      });
+    }
+
+    const matrixInterval = setInterval(drawMatrix, 33);
+
+    setTimeout(() => {
+      matrixCanvas.style.transition = 'opacity 2s';
+      matrixCanvas.style.opacity = '0';
+      clearInterval(matrixInterval);
+      setTimeout(() => {
+        matrixCanvas.remove();
+        startHeart();
+      }, 2000);
+    }, 8000);
+
+    // ===== BACKGROUND HEART EFFECT =====
+    const heartCanvas = document.getElementById('heartCanvas');
+    const ctx = heartCanvas.getContext('2d');
+    let width, height;
+    let particles = [];
+    const PARTICLE_COUNT = 600;
+    const heartChar = "❤";
+    const heartSize = 10;
+    const CENTER_HEART_RADIUS = 150;
+
+    function resize() {
+      width = window.innerWidth;
+      height = window.innerHeight;
+      heartCanvas.width = width;
+      heartCanvas.height = height;
+      updateTextPosition();
+    }
+
+    window.addEventListener('resize', resize);
+    resize();
+
+    function isInsideBigHeart(x, y) {
+      for (let t = 0; t < Math.PI * 2; t += 0.01) {
+        const pos = heartFunction(t);
+        const hx = pos.x * CENTER_HEART_RADIUS + width / 2;
+        const hy = -pos.y * CENTER_HEART_RADIUS + height / 2;
+        if (Math.hypot(hx - x, hy - y) < 10) return true;
+      }
+      return false;
+    }
+
+    class Particle {
+      constructor() {
+        this.reset();
+      }
+      reset() {
+        do {
+          this.x = Math.random() * width;
+          this.y = Math.random() * height;
+        } while (isInsideBigHeart(this.x, this.y));
+        this.size = Math.random() * 0.4 + 0.3;
+        this.speedY = 0.2 + Math.random() * 0.3;
+        this.alpha = 0.5 + Math.random() * 0.5;
+      }
+      update() {
+        this.y -= this.speedY;
+        if (this.y < -20) this.reset();
+      }
+      draw(ctx) {
+        ctx.save();
+        ctx.font = `${heartSize * this.size}px serif`;
+        ctx.fillStyle = `rgba(255, 118, 206, ${this.alpha})`;
+        ctx.translate(this.x, this.y);
+        ctx.rotate(Math.sin(this.y / 40) * 0.5);
+        ctx.fillText(heartChar, 0, 0);
+        ctx.restore();
+      }
+    }
+
+    function heartFunction(t) {
+      const x = 16 * Math.pow(Math.sin(t), 3);
+      const y = 13 * Math.cos(t) - 5 * Math.cos(2 * t) - 2 * Math.cos(3 * t) - Math.cos(4 * t);
+      return { x, y };
+    }
+
+    function drawBigHeart() {
+      ctx.save();
+      ctx.beginPath();
+      for (let t = 0; t < Math.PI * 2; t += 0.01) {
+        const pos = heartFunction(t);
+        const x = pos.x * CENTER_HEART_RADIUS + width / 2;
+        const y = -pos.y * CENTER_HEART_RADIUS + height / 2;
+        if (t === 0) ctx.moveTo(x, y);
+        else ctx.lineTo(x, y);
+      }
+      ctx.closePath();
+      ctx.strokeStyle = 'rgba(255, 118, 206, 0.6)';
+      ctx.lineWidth = 4;
+      ctx.shadowBlur = 15;
+      ctx.shadowColor = '#FF76CE';
+      ctx.stroke();
+      ctx.restore();
+    }
+
+    function animateHeartBackground() {
+      ctx.clearRect(0, 0, width, height);
+      particles.forEach(p => {
+        p.update();
+        p.draw(ctx);
+      });
+      drawBigHeart();
+      requestAnimationFrame(animateHeartBackground);
+    }
+
+    function updateTextPosition() {
+      const message = document.getElementById('message');
+      message.style.left = `${width / 2}px`;
+      message.style.top = `${height / 2}px`;
+    }
+
+    const messages = [
+      "Gửi, Nguyễn Châm Anh",
+      "Cảm ơn em vì đã ở bên anh, ",
+      "Yêu em !",
+    ];
+    const messageEl = document.getElementById('message');
+    let currentIndex = 0;
+
+    function typeWriter(text, i, callback) {
+      if (i < text.length) {
+        messageEl.textContent += text.charAt(i);
+        setTimeout(() => typeWriter(text, i + 1, callback), 70);
+      } else {
+        setTimeout(callback, 1000);
+      }
+    }
+
+    function showMessagesSequentially() {
+      messageEl.style.opacity = 1;
+      if (currentIndex < messages.length) {
+        messageEl.textContent = '';
+        typeWriter(messages[currentIndex], 0, () => {
+          currentIndex++;
+          showMessagesSequentially();
+        });
+      } else {
+        endScene();
+      }
+    }
+
+    function startHeart() {
+      heartCanvas.style.opacity = 1;
+      heartCanvas.style.transition = 'opacity 1s';
+      createParticles();
+      animateHeartBackground();
+      updateTextPosition();
+      setTimeout(showMessagesSequentially, 2000);
+    }
+
+    function createParticles() {
+      particles = [];
+      for (let i = 0; i < PARTICLE_COUNT; i++) {
+        particles.push(new Particle());
+      }
+    }
+
+    function endScene() {
+      setTimeout(() => {
+        heartCanvas.style.transition = 'opacity 2s';
+        messageEl.style.transition = 'opacity 2s';
+        heartCanvas.style.opacity = 0;
+        messageEl.style.opacity = 0;
+      }, 2000);
+
+      setTimeout(() => {
+        const amongUs = document.getElementById('amongUs');
+        amongUs.style.display = 'flex';
+        amongUs.style.transition = 'left 5s linear';
+        amongUs.style.left = '110%';
+
+        setTimeout(() => {
+          const blackOut = document.createElement('div');
+          blackOut.style.position = 'fixed';
+          blackOut.style.top = '0';
+          blackOut.style.left = '0';
+          blackOut.style.width = '100%';
+          blackOut.style.height = '100%';
+          blackOut.style.backgroundColor = 'black';
+          blackOut.style.transition = 'opacity 1.5s';
+          blackOut.style.opacity = '0';
+          blackOut.style.zIndex = '2000';
+          document.body.appendChild(blackOut);
+
+          setTimeout(() => blackOut.style.opacity = '1', 100);
+          setTimeout(() => window.close(), 2000);
+        }, 5000);
+      }, 4000);
+    }
+  </script>
+</body>
+</html>
